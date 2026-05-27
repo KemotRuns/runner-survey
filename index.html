@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chasing 42K — International Runner Survey</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #c0392b;
+      --dark-red: #962d22;
+      --orange: #e07030;
+      --dark: #1e1e2e;
+      --mid: #4a4a5a;
+      --light: #f5f4f0;
+      --white: #ffffff;
+      --border: #ddd8d0;
+      --radius: 10px;
+      --shadow: 0 2px 16px rgba(0,0,0,0.08);
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--light);
+      color: var(--dark);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .site-header {
+      background: var(--dark);
+      color: var(--white);
+      text-align: center;
+      padding: 40px 24px 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .site-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        -55deg,
+        transparent,
+        transparent 40px,
+        rgba(192,57,43,0.07) 40px,
+        rgba(192,57,43,0.07) 80px
+      );
+    }
+    .site-header .inner { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; }
+    .logo-line { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--orange); margin-bottom: 12px; }
+    .site-header h1 { font-size: clamp(28px, 5vw, 42px); font-weight: 800; color: var(--white); line-height: 1.1; }
+    .site-header h1 span { color: var(--red); }
+    .subtitle { font-size: 15px; color: rgba(255,255,255,0.65); margin-top: 8px; font-style: italic; }
+    .header-desc { margin-top: 20px; font-size: 14.5px; line-height: 1.7; color: rgba(255,255,255,0.82); }
+    .header-desc .zh { color: rgba(255,255,255,0.5); font-size: 13px; }
+    .time-badge {
+      display: inline-block; margin-top: 16px;
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+      padding: 6px 16px; border-radius: 20px; font-size: 13px; color: rgba(255,255,255,0.7);
+    }
+
+    /* ── PROGRESS ── */
+    .progress-wrap {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .progress-meta { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--mid); margin-bottom: 8px; max-width: 680px; margin-left: auto; margin-right: auto; }
+    .progress-bar-track { background: var(--border); border-radius: 99px; height: 5px; max-width: 680px; margin: 0 auto; overflow: hidden; }
+    .progress-bar-fill { background: var(--red); height: 100%; border-radius: 99px; transition: width 0.4s ease; }
+
+    /* ── MAIN CONTAINER ── */
+    .main { max-width: 700px; margin: 0 auto; padding: 32px 16px 80px; }
+
+    /* ── STEP ── */
+    .step { display: none; animation: fadeIn 0.3s ease; }
+    .step.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .section-header {
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--border);
+    }
+    .section-label { font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--red); font-weight: 700; margin-bottom: 6px; }
+    .section-title { font-size: 26px; font-weight: 800; color: var(--dark); }
+    .section-title .zh { font-size: 18px; font-weight: 400; color: var(--mid); margin-left: 8px; }
+    .section-desc { font-size: 14px; color: var(--mid); margin-top: 8px; line-height: 1.6; }
+
+    /* ── QUESTION CARD ── */
+    .q-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+    .q-label { font-size: 15px; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+    .q-label .num { color: var(--red); margin-right: 4px; }
+    .q-sublabel { font-size: 12.5px; color: #888; font-style: italic; margin-bottom: 14px; }
+
+    /* ── TEXT INPUT ── */
+    .q-card input[type="text"],
+    .q-card textarea {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      padding: 10px 14px;
+      font-size: 14.5px;
+      font-family: inherit;
+      color: var(--dark);
+      background: #fafafa;
+      transition: border-color 0.2s;
+      resize: vertical;
+    }
+    .q-card input[type="text"]:focus,
+    .q-card textarea:focus {
+      outline: none;
+      border-color: var(--red);
+      background: var(--white);
+    }
+    .q-card textarea { min-height: 100px; }
+
+    /* ── RADIO / CHECKBOX OPTIONS ── */
+    .options { display: flex; flex-direction: column; gap: 8px; }
+    .option-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .option-row:hover { border-color: var(--red); background: #fff5f5; }
+    .option-row input { width: 17px; height: 17px; margin-top: 1px; accent-color: var(--red); flex-shrink: 0; cursor: pointer; }
+    .option-row.checked { border-color: var(--red); background: #fff5f5; }
+    .option-text { font-size: 14px; color: var(--dark); line-height: 1.4; }
+    .option-text .zh { color: #888; font-size: 12.5px; font-style: italic; }
+
+    /* ── RATING SCALE ── */
+    .rating-group { margin-bottom: 20px; }
+    .rating-group:last-child { margin-bottom: 0; }
+    .ep-title { font-size: 14px; font-weight: 700; color: var(--dark); margin-bottom: 3px; }
+    .ep-title .ep-num { color: var(--red); margin-right: 4px; }
+    .ep-desc { font-size: 12px; color: #888; font-style: italic; margin-bottom: 10px; }
+    .rating-scale {
+      display: flex; gap: 6px; align-items: stretch;
+    }
+    .rating-option { flex: 1; }
+    .rating-option input { display: none; }
+    .rating-option label {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 8px 4px; cursor: pointer; transition: all 0.15s;
+      font-size: 12px; color: var(--mid); text-align: center; min-height: 60px;
+      line-height: 1.3;
+    }
+    .rating-option label .num { font-size: 18px; font-weight: 800; color: var(--border); display: block; margin-bottom: 2px; transition: color 0.15s; }
+    .rating-option input:checked + label { border-color: var(--red); background: #fff0ee; }
+    .rating-option input:checked + label .num { color: var(--red); }
+    .rating-option label:hover { border-color: var(--orange); background: #fff8f5; }
+    .rating-option label:hover .num { color: var(--orange); }
+
+    /* ── RANK SELECTS ── */
+    .rank-row { display: flex; flex-direction: column; gap: 10px; }
+    .rank-item { display: flex; align-items: center; gap: 12px; }
+    .rank-badge { background: var(--red); color: var(--white); font-weight: 800; font-size: 12px; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+    .rank-item select {
+      flex: 1; border: 1.5px solid var(--border); border-radius: 7px;
+      padding: 10px 14px; font-size: 14px; font-family: inherit; color: var(--dark);
+      background: #fafafa; cursor: pointer;
+    }
+    .rank-item select:focus { outline: none; border-color: var(--red); }
+
+    /* ── CHAR LIMIT HINT ── */
+    .char-note { font-size: 11.5px; color: #aaa; margin-top: 6px; text-align: right; }
+
+    /* ── NAVIGATION ── */
+    .nav { display: flex; justify-content: space-between; align-items: center; margin-top: 28px; gap: 12px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 28px; border-radius: 8px; font-size: 15px; font-weight: 700;
+      border: none; cursor: pointer; transition: all 0.2s; font-family: inherit;
+    }
+    .btn-back { background: var(--white); color: var(--mid); border: 1.5px solid var(--border); }
+    .btn-back:hover { border-color: var(--mid); color: var(--dark); }
+    .btn-next { background: var(--red); color: var(--white); margin-left: auto; }
+    .btn-next:hover { background: var(--dark-red); transform: translateY(-1px); }
+    .btn-submit { background: var(--dark); color: var(--white); margin-left: auto; }
+    .btn-submit:hover { background: #111; transform: translateY(-1px); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+    /* ── VALIDATION ── */
+    .error-msg { color: #c0392b; font-size: 12.5px; margin-top: 6px; display: none; }
+    .q-card.has-error .error-msg { display: block; }
+    .q-card.has-error input[type="text"],
+    .q-card.has-error textarea { border-color: #e74c3c; }
+
+    /* ── SUCCESS SCREEN ── */
+    #success-screen {
+      display: none; text-align: center; padding: 60px 24px;
+      max-width: 560px; margin: 0 auto;
+    }
+    .success-icon { font-size: 64px; margin-bottom: 24px; }
+    .success-title { font-size: 30px; font-weight: 800; color: var(--dark); margin-bottom: 8px; }
+    .success-sub { font-size: 18px; color: var(--mid); margin-bottom: 16px; }
+    .success-msg { font-size: 14.5px; color: var(--mid); line-height: 1.7; }
+    .success-msg .zh { color: #aaa; font-style: italic; }
+
+    /* ── ERROR BANNER ── */
+    #submit-error {
+      display: none; background: #fef2f2; border: 1px solid #fca5a5;
+      border-radius: 8px; padding: 14px 18px; margin-top: 16px;
+      font-size: 14px; color: #991b1b;
+    }
+
+    /* ── HELPER ── */
+    .cap-note { font-size: 12px; color: var(--orange); margin-top: 4px; font-weight: 600; }
+
+    @media (max-width: 480px) {
+      .q-card { padding: 16px; }
+      .rating-scale { gap: 4px; }
+      .rating-option label { font-size: 10px; padding: 6px 2px; min-height: 52px; }
+      .rating-option label .num { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════ HEADER ══════════════════════ -->
+<header class="site-header">
+  <div class="inner">
+    <p class="logo-line">TaiwanPlus Documentary Series</p>
+    <h1>Chasing <span>42K</span> of Marathon</h1>
+    <p class="subtitle">台灣馬拉松紀錄片 — 國際跑者調查問卷</p>
+    <p class="header-desc">
+      Thank you for taking part in this short survey. Your input will directly shape an upcoming TaiwanPlus documentary series exploring why Taiwan has become one of the world's most distinctive running cultures.<br>
+      <span class="zh">感謝你撥空填寫這份問卷。你的回饋將直接協助 TaiwanPlus 紀錄片系列確認內容方向。</span>
+    </p>
+    <span class="time-badge">⏱ Estimated time: 8–10 minutes / 預估填答時間: 8–10 分鐘</span>
+  </div>
+</header>
+
+<!-- ══════════════════════ PROGRESS ══════════════════════ -->
+<div class="progress-wrap">
+  <div class="progress-meta">
+    <span id="step-label">Section A · About You</span>
+    <span id="step-count">1 / 6</span>
+  </div>
+  <div class="progress-bar-track">
+    <div class="progress-bar-fill" id="progress-fill" style="width:16.6%"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════ MAIN ══════════════════════ -->
+<main class="main">
+
+  <!-- ━━━━━━━━━━━━ STEP 1 · SECTION A ━━━━━━━━━━━━ -->
+  <div class="step active" id="step-1">
+    <div class="section-header">
+      <div class="section-label">Section A</div>
+      <div class="section-title">About You <span class="zh">關於你</span></div>
+    </div>
+
+    <!-- A1 -->
+    <div class="q-card" id="q-a1">
+      <div class="q-label"><span class="num">A1.</span> What is your nationality?</div>
+      <div class="q-sublabel">你的國籍?</div>
+      <input type="text" id="a1" placeholder="e.g. British, Japanese, American… / 請填寫" />
+      <div class="error-msg">Please enter your nationality.</div>
+    </div>
+
+    <!-- A2 -->
+    <div class="q-card" id="q-a2">
+      <div class="q-label"><span class="num">A2.</span> Age group</div>
+      <div class="q-sublabel">年齡層</div>
+      <div class="options" role="radiogroup">
+        <label class="option-row"><input type="radio" name="a2" value="18–25" /> <span class="option-text">18–25</span></label>
+        <label class="option-row"><input type="radio" name="a2" value="26–35" /> <span class="option-text">26–35</span></label>
+        <label class="option-row"><input type="radio" name="a2" value="36–45" /> <span class="option-text">36–45</span></label>
+        <label class="option-row"><input type="radio" name="a2" value="46–55" /> <span class="option-text">46–55</span></label>
+        <label class="option-row"><input type="radio" name="a2" value="56+" />   <span class="option-text">56+</span></label>
+      </div>
+      <div class="error-msg">Please select your age group.</div>
+    </div>
+
+    <!-- A3 -->
+    <div class="q-card" id="q-a3">
+      <div class="q-label"><span class="num">A3.</span> Years of running experience</div>
+      <div class="q-sublabel">跑齡</div>
+      <div class="options" role="radiogroup">
+        <label class="option-row"><input type="radio" name="a3" value="Less than 1 year" /> <span class="option-text">Less than 1 year <span class="zh">/ 少於 1 年</span></span></label>
+        <label class="option-row"><input type="radio" name="a3" value="1–3 years" />         <span class="option-text">1–3 years <span class="zh">/ 1–3 年</span></span></label>
+        <label class="option-row"><input type="radio" name="a3" value="3–5 years" />         <span class="option-text">3–5 years <span class="zh">/ 3–5 年</span></span></label>
+        <label class="option-row"><input type="radio" name="a3" value="5–10 years" />        <span class="option-text">5–10 years <span class="zh">/ 5–10 年</span></span></label>
+        <label class="option-row"><input type="radio" name="a3" value="More than 10 years" /><span class="option-text">More than 10 years <span class="zh">/ 10 年以上</span></span></label>
+      </div>
+      <div class="error-msg">Please select your running experience.</div>
+    </div>
+
+    <!-- A4 -->
+    <div class="q-card" id="q-a4">
+      <div class="q-label"><span class="num">A4.</span> Number of full marathons (42K) completed</div>
+      <div class="q-sublabel">完成全馬 (42K) 場次</div>
+      <div class="options" role="radiogroup">
+        <label class="option-row"><input type="radio" name="a4" value="None — I run shorter distances" /><span class="option-text">None — I run shorter distances <span class="zh">/ 尚未完成全馬,只跑短距離</span></span></label>
+        <label class="option-row"><input type="radio" name="a4" value="1–3" />                            <span class="option-text">1–3 <span class="zh">/ 1–3 場</span></span></label>
+        <label class="option-row"><input type="radio" name="a4" value="4–10" />                           <span class="option-text">4–10 <span class="zh">/ 4–10 場</span></span></label>
+        <label class="option-row"><input type="radio" name="a4" value="11–50" />                          <span class="option-text">11–50 <span class="zh">/ 11–50 場</span></span></label>
+        <label class="option-row"><input type="radio" name="a4" value="More than 50 (centurion track)" /><span class="option-text">More than 50 (centurion track) <span class="zh">/ 超過 50 場 (百馬路上)</span></span></label>
+      </div>
+      <div class="error-msg">Please select number of marathons completed.</div>
+    </div>
+
+    <!-- A5 -->
+    <div class="q-card" id="q-a5">
+      <div class="q-label"><span class="num">A5.</span> Have you run a race in Taiwan?</div>
+      <div class="q-sublabel">是否曾在台灣參加過比賽?</div>
+      <div class="options" role="radiogroup">
+        <label class="option-row"><input type="radio" name="a5" value="Yes — multiple times" /><span class="option-text">Yes — multiple times <span class="zh">/ 是,多次</span></span></label>
+        <label class="option-row"><input type="radio" name="a5" value="Yes — once" />           <span class="option-text">Yes — once <span class="zh">/ 是,一次</span></span></label>
+        <label class="option-row"><input type="radio" name="a5" value="No — but I'm considering it" /><span class="option-text">No — but I'm considering it <span class="zh">/ 尚未,但有考慮</span></span></label>
+        <label class="option-row"><input type="radio" name="a5" value="No — not on my radar yet" />   <span class="option-text">No — not on my radar yet <span class="zh">/ 尚未,也還沒列入計畫</span></span></label>
+      </div>
+      <div class="error-msg">Please select an option.</div>
+    </div>
+
+    <div class="nav">
+      <div></div>
+      <button class="btn btn-next" onclick="nextStep(1)">Next: Why Taiwan? →</button>
+    </div>
+  </div>
+
+  <!-- ━━━━━━━━━━━━ STEP 2 · SECTION B ━━━━━━━━━━━━ -->
+  <div class="step" id="step-2">
+    <div class="section-header">
+      <div class="section-label">Section B</div>
+      <div class="section-title">Why Taiwan? <span class="zh">為何選擇台灣</span></div>
+    </div>
+
+    <!-- B1 -->
+    <div class="q-card" id="q-b1">
+      <div class="q-label"><span class="num">B1.</span> What attracts (or would attract) you to run a marathon in Taiwan?</div>
+      <div class="q-sublabel">什麼吸引你 (或會吸引你) 來台灣跑馬拉松?</div>
+      <div class="cap-note">Choose up to 3 / 最多選 3 項</div>
+      <br/>
+      <div class="options" id="b1-options">
+        <label class="option-row"><input type="checkbox" name="b1" value="International race reputation (Taipei, Wanjinshi — World Athletics labels)" /><span class="option-text">International race reputation (Taipei, Wanjinshi — World Athletics labels) <span class="zh">/ 國際金標賽事 (台北馬、萬金石)</span></span></label>
+        <label class="option-row"><input type="checkbox" name="b1" value="Unique food / aid-station culture" />     <span class="option-text">Unique food / aid-station culture <span class="zh">/ 獨特的補給文化</span></span></label>
+        <label class="option-row"><input type="checkbox" name="b1" value="Scenic routes (mountain, coast, urban)" /><span class="option-text">Scenic routes (mountain, coast, urban) <span class="zh">/ 路線景觀 (山、海、城市)</span></span></label>
+        <label class="option-row"><input type="checkbox" name="b1" value="Local hospitality and atmosphere" />       <span class="option-text">Local hospitality and atmosphere <span class="zh">/ 在地人情與氣氛</span></span></label>
+        <label class="option-row"><input type="checkbox" name="b1" value="Affordable destination" />                <span class="option-text">Affordable destination <span class="zh">/ 旅遊成本相對合理</span></span></label>
+        <label class="option-row"><input type="checkbox" name="b1" value="Cultural and historical interest" />       <span class="option-text">Cultural and historical interest <span class="zh">/ 文化與歷史的興趣</span></span></label>
+        <label class="option-row"><input type="checkbox" name="b1" value="Recommendation from running friends" />   <span class="option-text">Recommendation from running friends <span class="zh">/ 跑友推薦</span></span></label>
+        <label class="option-row"><input type="checkbox" name="b1" value="Travel + running combo (running tourism)" /><span class="option-text">Travel + running combo (running tourism) <span class="zh">/ 邊跑邊旅遊</span></span></label>
+        <label class="option-row"><input type="checkbox" name="b1" value="Other" id="b1-other-check" />             <span class="option-text">Other — please describe below <span class="zh">/ 其他 — 請於下方說明</span></span></label>
+      </div>
+      <div id="b1-other-wrap" style="display:none; margin-top:10px;">
+        <input type="text" id="b1-other-text" placeholder="Please describe / 請說明" />
+      </div>
+      <div class="error-msg">Please select at least one option.</div>
+    </div>
+
+    <!-- B2 -->
+    <div class="q-card" id="q-b2">
+      <div class="q-label"><span class="num">B2.</span> What's the BIGGEST barrier or hesitation to running in Taiwan?</div>
+      <div class="q-sublabel">參加台灣比賽最大的顧慮或門檻是什麼?</div>
+      <div class="options" role="radiogroup">
+        <label class="option-row"><input type="radio" name="b2" value="Distance / travel cost" />              <span class="option-text">Distance / travel cost <span class="zh">/ 距離與旅費</span></span></label>
+        <label class="option-row"><input type="radio" name="b2" value="Language barrier" />                    <span class="option-text">Language barrier <span class="zh">/ 語言隔閡</span></span></label>
+        <label class="option-row"><input type="radio" name="b2" value="Don't know enough about the races" />   <span class="option-text">Don't know enough about the races <span class="zh">/ 對賽事了解不夠</span></span></label>
+        <label class="option-row"><input type="radio" name="b2" value="Climate / humidity" />                  <span class="option-text">Climate / humidity <span class="zh">/ 氣候、濕度</span></span></label>
+        <label class="option-row"><input type="radio" name="b2" value="Visa / logistics" />                    <span class="option-text">Visa / logistics <span class="zh">/ 簽證或交通安排</span></span></label>
+        <label class="option-row"><input type="radio" name="b2" value="No specific barrier" />                 <span class="option-text">No specific barrier <span class="zh">/ 沒有特別顧慮</span></span></label>
+        <label class="option-row"><input type="radio" name="b2" value="Other" />                              <span class="option-text">Other <span class="zh">/ 其他</span></span></label>
+      </div>
+      <div style="margin-top:12px;">
+        <input type="text" id="b2-comments" placeholder="Comments / 補充 (optional)" />
+      </div>
+      <div class="error-msg">Please select your biggest barrier.</div>
+    </div>
+
+    <!-- B3 -->
+    <div class="q-card" id="q-b3">
+      <div class="q-label"><span class="num">B3.</span> In ONE word or short phrase: what comes to mind when you think of "running in Taiwan"?</div>
+      <div class="q-sublabel">用一個字或一句話形容「在台灣跑步」</div>
+      <input type="text" id="b3" placeholder="Your answer / 請填寫" maxlength="80" />
+      <div class="char-note">Max 80 characters</div>
+      <div class="error-msg">Please share a word or phrase.</div>
+    </div>
+
+    <div class="nav">
+      <button class="btn btn-back" onclick="prevStep(2)">← Back</button>
+      <button class="btn btn-next" onclick="nextStep(2)">Next: Episode Ratings →</button>
+    </div>
+  </div>
+
+  <!-- ━━━━━━━━━━━━ STEP 3 · SECTION C ━━━━━━━━━━━━ -->
+  <div class="step" id="step-3">
+    <div class="section-header">
+      <div class="section-label">Section C</div>
+      <div class="section-title">Episode Theme Appeal <span class="zh">各集主題吸引力</span></div>
+      <div class="section-desc">For each episode, rate how interested you'd be in watching a 60-minute episode. <br><span style="font-style:italic;color:#aaa;">請針對以下 8 集主題評分你的觀看意願。</span></div>
+    </div>
+
+    <div class="q-card">
+      <!-- C1 -->
+      <div class="rating-group" id="rg-c1">
+        <div class="ep-title"><span class="ep-num">EP01 —</span> When Running Becomes a Global Language / 當跑步成為全世界的語言</div>
+        <div class="ep-desc">International runners discover Taiwan; GPS Art running; "Why Taiwan?" through outsider eyes.</div>
+        <div class="rating-scale">
+          <div class="rating-option"><input type="radio" name="c1" id="c1-1" value="1"><label for="c1-1"><span class="num">1</span>Not at all</label></div>
+          <div class="rating-option"><input type="radio" name="c1" id="c1-2" value="2"><label for="c1-2"><span class="num">2</span>Slightly</label></div>
+          <div class="rating-option"><input type="radio" name="c1" id="c1-3" value="3"><label for="c1-3"><span class="num">3</span>Neutral</label></div>
+          <div class="rating-option"><input type="radio" name="c1" id="c1-4" value="4"><label for="c1-4"><span class="num">4</span>Interested</label></div>
+          <div class="rating-option"><input type="radio" name="c1" id="c1-5" value="5"><label for="c1-5"><span class="num">5</span>Definitely</label></div>
+        </div>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:18px 0;">
+
+      <!-- C2 -->
+      <div class="rating-group" id="rg-c2">
+        <div class="ep-title"><span class="ep-num">EP02 —</span> The Runner's Body & Science / 跑者的身體與科學</div>
+        <div class="ep-desc">Sports science, training methods, recovery; elite vs. amateur body data; running injuries explained.</div>
+        <div class="rating-scale">
+          <div class="rating-option"><input type="radio" name="c2" id="c2-1" value="1"><label for="c2-1"><span class="num">1</span>Not at all</label></div>
+          <div class="rating-option"><input type="radio" name="c2" id="c2-2" value="2"><label for="c2-2"><span class="num">2</span>Slightly</label></div>
+          <div class="rating-option"><input type="radio" name="c2" id="c2-3" value="3"><label for="c2-3"><span class="num">3</span>Neutral</label></div>
+          <div class="rating-option"><input type="radio" name="c2" id="c2-4" value="4"><label for="c2-4"><span class="num">4</span>Interested</label></div>
+          <div class="rating-option"><input type="radio" name="c2" id="c2-5" value="5"><label for="c2-5"><span class="num">5</span>Definitely</label></div>
+        </div>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:18px 0;">
+
+      <!-- C3 -->
+      <div class="rating-group" id="rg-c3">
+        <div class="ep-title"><span class="ep-num">EP03 —</span> Breathing at the Foot of the Mountain / 山腳下的呼吸</div>
+        <div class="ep-desc">Taiwan trail running, forest therapy science, indigenous hunting paths, high-altitude potential.</div>
+        <div class="rating-scale">
+          <div class="rating-option"><input type="radio" name="c3" id="c3-1" value="1"><label for="c3-1"><span class="num">1</span>Not at all</label></div>
+          <div class="rating-option"><input type="radio" name="c3" id="c3-2" value="2"><label for="c3-2"><span class="num">2</span>Slightly</label></div>
+          <div class="rating-option"><input type="radio" name="c3" id="c3-3" value="3"><label for="c3-3"><span class="num">3</span>Neutral</label></div>
+          <div class="rating-option"><input type="radio" name="c3" id="c3-4" value="4"><label for="c3-4"><span class="num">4</span>Interested</label></div>
+          <div class="rating-option"><input type="radio" name="c3" id="c3-5" value="5"><label for="c3-5"><span class="num">5</span>Definitely</label></div>
+        </div>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:18px 0;">
+
+      <!-- C4 -->
+      <div class="rating-group" id="rg-c4">
+        <div class="ep-title"><span class="ep-num">EP04 —</span> The Unseen Runners / 看不見的跑者</div>
+        <div class="ep-desc">Visually-impaired runners and their guide pairs; wheelchair and amputee athletes; the trust that running builds.</div>
+        <div class="rating-scale">
+          <div class="rating-option"><input type="radio" name="c4" id="c4-1" value="1"><label for="c4-1"><span class="num">1</span>Not at all</label></div>
+          <div class="rating-option"><input type="radio" name="c4" id="c4-2" value="2"><label for="c4-2"><span class="num">2</span>Slightly</label></div>
+          <div class="rating-option"><input type="radio" name="c4" id="c4-3" value="3"><label for="c4-3"><span class="num">3</span>Neutral</label></div>
+          <div class="rating-option"><input type="radio" name="c4" id="c4-4" value="4"><label for="c4-4"><span class="num">4</span>Interested</label></div>
+          <div class="rating-option"><input type="radio" name="c4" id="c4-5" value="5"><label for="c4-5"><span class="num">5</span>Definitely</label></div>
+        </div>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:18px 0;">
+
+      <!-- C5 -->
+      <div class="rating-group" id="rg-c5">
+        <div class="ep-title"><span class="ep-num">EP05 —</span> Running Is a City's Soul / 跑步是一座城市的靈魂</div>
+        <div class="ep-desc">How running revitalizes towns — Tianzhong (rural village), Penghu (island), and the local economy of races.</div>
+        <div class="rating-scale">
+          <div class="rating-option"><input type="radio" name="c5" id="c5-1" value="1"><label for="c5-1"><span class="num">1</span>Not at all</label></div>
+          <div class="rating-option"><input type="radio" name="c5" id="c5-2" value="2"><label for="c5-2"><span class="num">2</span>Slightly</label></div>
+          <div class="rating-option"><input type="radio" name="c5" id="c5-3" value="3"><label for="c5-3"><span class="num">3</span>Neutral</label></div>
+          <div class="rating-option"><input type="radio" name="c5" id="c5-4" value="4"><label for="c5-4"><span class="num">4</span>Interested</label></div>
+          <div class="rating-option"><input type="radio" name="c5" id="c5-5" value="5"><label for="c5-5"><span class="num">5</span>Definitely</label></div>
+        </div>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:18px 0;">
+
+      <!-- C6 -->
+      <div class="rating-group" id="rg-c6">
+        <div class="ep-title"><span class="ep-num">EP06 —</span> Women's Strides / 女性的腳步</div>
+        <div class="ep-desc">Female empowerment through running; mother-runners, professional women, the Women-Can half-marathon.</div>
+        <div class="rating-scale">
+          <div class="rating-option"><input type="radio" name="c6" id="c6-1" value="1"><label for="c6-1"><span class="num">1</span>Not at all</label></div>
+          <div class="rating-option"><input type="radio" name="c6" id="c6-2" value="2"><label for="c6-2"><span class="num">2</span>Slightly</label></div>
+          <div class="rating-option"><input type="radio" name="c6" id="c6-3" value="3"><label for="c6-3"><span class="num">3</span>Neutral</label></div>
+          <div class="rating-option"><input type="radio" name="c6" id="c6-4" value="4"><label for="c6-4"><span class="num">4</span>Interested</label></div>
+          <div class="rating-option"><input type="radio" name="c6" id="c6-5" value="5"><label for="c6-5"><span class="num">5</span>Definitely</label></div>
+        </div>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:18px 0;">
+
+      <!-- C7 -->
+      <div class="rating-group" id="rg-c7">
+        <div class="ep-title"><span class="ep-num">EP07 —</span> Running Tribes / 跑者的社群文化</div>
+        <div class="ep-desc">Running team culture, group training, post-run gatherings — the community side of an "individual" sport.</div>
+        <div class="rating-scale">
+          <div class="rating-option"><input type="radio" name="c7" id="c7-1" value="1"><label for="c7-1"><span class="num">1</span>Not at all</label></div>
+          <div class="rating-option"><input type="radio" name="c7" id="c7-2" value="2"><label for="c7-2"><span class="num">2</span>Slightly</label></div>
+          <div class="rating-option"><input type="radio" name="c7" id="c7-3" value="3"><label for="c7-3"><span class="num">3</span>Neutral</label></div>
+          <div class="rating-option"><input type="radio" name="c7" id="c7-4" value="4"><label for="c7-4"><span class="num">4</span>Interested</label></div>
+          <div class="rating-option"><input type="radio" name="c7" id="c7-5" value="5"><label for="c7-5"><span class="num">5</span>Definitely</label></div>
+        </div>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:18px 0;">
+
+      <!-- C8 -->
+      <div class="rating-group" id="rg-c8">
+        <div class="ep-title"><span class="ep-num">EP08 —</span> Aid Stations as Culture / 補給是一種文化</div>
+        <div class="ep-desc">Taiwan's legendary aid stations: hand-made tangyuan, sticky rice, honey water, squid — local food on the run.</div>
+        <div class="rating-scale">
+          <div class="rating-option"><input type="radio" name="c8" id="c8-1" value="1"><label for="c8-1"><span class="num">1</span>Not at all</label></div>
+          <div class="rating-option"><input type="radio" name="c8" id="c8-2" value="2"><label for="c8-2"><span class="num">2</span>Slightly</label></div>
+          <div class="rating-option"><input type="radio" name="c8" id="c8-3" value="3"><label for="c8-3"><span class="num">3</span>Neutral</label></div>
+          <div class="rating-option"><input type="radio" name="c8" id="c8-4" value="4"><label for="c8-4"><span class="num">4</span>Interested</label></div>
+          <div class="rating-option"><input type="radio" name="c8" id="c8-5" value="5"><label for="c8-5"><span class="num">5</span>Definitely</label></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- C9 -->
+    <div class="q-card" id="q-c9">
+      <div class="q-label"><span class="num">C9.</span> Which THREE episodes would you watch FIRST? Please rank top 3.</div>
+      <div class="q-sublabel">你會最先看的「前三集」? 請排序</div>
+      <div class="rank-row">
+        <div class="rank-item">
+          <span class="rank-badge">1st / 第一名</span>
+          <select id="c9-1" onchange="updateRankSelects()">
+            <option value="">— Select an episode —</option>
+            <option value="EP01 — When Running Becomes a Global Language">EP01 — When Running Becomes a Global Language</option>
+            <option value="EP02 — The Runner's Body & Science">EP02 — The Runner's Body & Science</option>
+            <option value="EP03 — Breathing at the Foot of the Mountain">EP03 — Breathing at the Foot of the Mountain</option>
+            <option value="EP04 — The Unseen Runners">EP04 — The Unseen Runners</option>
+            <option value="EP05 — Running Is a City's Soul">EP05 — Running Is a City's Soul</option>
+            <option value="EP06 — Women's Strides">EP06 — Women's Strides</option>
+            <option value="EP07 — Running Tribes">EP07 — Running Tribes</option>
+            <option value="EP08 — Aid Stations as Culture">EP08 — Aid Stations as Culture</option>
+          </select>
+        </div>
+        <div class="rank-item">
+          <span class="rank-badge">2nd / 第二名</span>
+          <select id="c9-2" onchange="updateRankSelects()">
+            <option value="">— Select an episode —</option>
+            <option value="EP01 — When Running Becomes a Global Language">EP01 — When Running Becomes a Global Language</option>
+            <option value="EP02 — The Runner's Body & Science">EP02 — The Runner's Body & Science</option>
+            <option value="EP03 — Breathing at the Foot of the Mountain">EP03 — Breathing at the Foot of the Mountain</option>
+            <option value="EP04 — The Unseen Runners">EP04 — The Unseen Runners</option>
+            <option value="EP05 — Running Is a City's Soul">EP05 — Running Is a City's Soul</option>
+            <option value="EP06 — Women's Strides">EP06 — Women's Strides</option>
+            <option value="EP07 — Running Tribes">EP07 — Running Tribes</option>
+            <option value="EP08 — Aid Stations as Culture">EP08 — Aid Stations as Culture</option>
+          </select>
+        </div>
+        <div class="rank-item">
+          <span class="rank-badge">3rd / 第三名</span>
+          <select id="c9-3" onchange="updateRankSelects()">
+            <option value="">— Select an episode —</option>
+            <option value="EP01 — When Running Becomes a Global Language">EP01 — When Running Becomes a Global Language</option>
+            <option value="EP02 — The Runner's Body & Science">EP02 — The Runner's Body & Science</option>
+            <option value="EP03 — Breathing at the Foot of the Mountain">EP03 — Breathing at the Foot of the Mountain</option>
+            <option value="EP04 — The Unseen Runners">EP04 — The Unseen Runners</option>
+            <option value="EP05 — Running Is a City's Soul">EP05 — Running Is a City's Soul</option>
+            <option value="EP06 — Women's Strides">EP06 — Women's Strides</option>
+            <option value="EP07 — Running Tribes">EP07 — Running Tribes</option>
+            <option value="EP08 — Aid Stations as Culture">EP08 — Aid Stations as Culture</option>
+          </select>
+        </div>
+      </div>
+      <div class="error-msg" id="c9-error">Please rank all three episodes and choose different episodes for each.</div>
+    </div>
+
+    <div class="nav">
+      <button class="btn btn-back" onclick="prevStep(3)">← Back</button>
+      <button class="btn btn-next" onclick="nextStep(3)">Next: Format & Viewing →</button>
+    </div>
+  </div>
+
+  <!-- ━━━━━━━━━━━━ STEP 4 · SECTION D ━━━━━━━━━━━━ -->
+  <div class="step" id="step-4">
+    <div class="section-header">
+      <div class="section-label">Section D</div>
+      <div class="section-title">Format & Viewing <span class="zh">內容形式與觀看習慣</span></div>
+    </div>
+
+    <!-- D1 -->
+    <div class="q-card" id="q-d1">
+      <div class="q-label"><span class="num">D1.</span> How long would you typically watch a running-related video?</div>
+      <div class="q-sublabel">你通常會看多長的跑步相關影片?</div>
+      <div class="options" role="radiogroup">
+        <label class="option-row"><input type="radio" name="d1" value="Under 1 minute (Reels / Shorts)" /><span class="option-text">Under 1 minute (Reels / Shorts) <span class="zh">/ 1 分鐘以內 (短影片)</span></span></label>
+        <label class="option-row"><input type="radio" name="d1" value="1–5 minutes" />                    <span class="option-text">1–5 minutes <span class="zh">/ 1–5 分鐘</span></span></label>
+        <label class="option-row"><input type="radio" name="d1" value="5–15 minutes (YouTube standard)" /><span class="option-text">5–15 minutes (YouTube standard) <span class="zh">/ 5–15 分鐘 (一般 YouTube)</span></span></label>
+        <label class="option-row"><input type="radio" name="d1" value="15–30 minutes" />                  <span class="option-text">15–30 minutes <span class="zh">/ 15–30 分鐘</span></span></label>
+        <label class="option-row"><input type="radio" name="d1" value="30–60 minutes (long-form documentary)" /><span class="option-text">30–60 minutes (long-form documentary) <span class="zh">/ 30–60 分鐘 (紀錄片長度)</span></span></label>
+        <label class="option-row"><input type="radio" name="d1" value="Over 60 minutes" />                <span class="option-text">Over 60 minutes <span class="zh">/ 60 分鐘以上</span></span></label>
+      </div>
+      <div class="error-msg">Please select a video length.</div>
+    </div>
+
+    <!-- D2 -->
+    <div class="q-card" id="q-d2">
+      <div class="q-label"><span class="num">D2.</span> Where do you usually watch running content?</div>
+      <div class="q-sublabel">通常在哪裡觀看跑步相關內容? (可複選)</div>
+      <div class="cap-note">Choose all that apply</div>
+      <br/>
+      <div class="options">
+        <label class="option-row"><input type="checkbox" name="d2" value="YouTube" />                                           <span class="option-text">YouTube</span></label>
+        <label class="option-row"><input type="checkbox" name="d2" value="Instagram Reels" />                                   <span class="option-text">Instagram Reels</span></label>
+        <label class="option-row"><input type="checkbox" name="d2" value="TikTok" />                                            <span class="option-text">TikTok</span></label>
+        <label class="option-row"><input type="checkbox" name="d2" value="Netflix / streaming platforms" />                     <span class="option-text">Netflix / streaming platforms <span class="zh">/ Netflix 或其他串流平台</span></span></label>
+        <label class="option-row"><input type="checkbox" name="d2" value="Strava / Garmin / running platforms" />               <span class="option-text">Strava / Garmin / running platforms <span class="zh">/ Strava、Garmin 等跑步平台</span></span></label>
+        <label class="option-row"><input type="checkbox" name="d2" value="Running brand content (Nike, On, Asics, etc.)" />     <span class="option-text">Running brand content (Nike, On, Asics, etc.) <span class="zh">/ 運動品牌內容</span></span></label>
+        <label class="option-row"><input type="checkbox" name="d2" value="Specialized running media (Runner's World, etc.)" /> <span class="option-text">Specialized running media (Runner's World, etc.) <span class="zh">/ 專業跑步媒體</span></span></label>
+        <label class="option-row"><input type="checkbox" name="d2" value="Other" />                                             <span class="option-text">Other <span class="zh">/ 其他</span></span></label>
+      </div>
+      <div class="error-msg">Please select at least one platform.</div>
+    </div>
+
+    <!-- D3 -->
+    <div class="q-card" id="q-d3">
+      <div class="q-label"><span class="num">D3.</span> What would hook you in the FIRST 30 SECONDS of an episode?</div>
+      <div class="q-sublabel">影片開頭 30 秒內,什麼最能抓住你?</div>
+      <div class="cap-note">Choose up to 2 / 最多選 2 項</div>
+      <br/>
+      <div class="options" id="d3-options">
+        <label class="option-row"><input type="checkbox" name="d3" value="Stunning landscape / aerial shots" />          <span class="option-text">Stunning landscape / aerial shots <span class="zh">/ 壯闊景色或空拍</span></span></label>
+        <label class="option-row"><input type="checkbox" name="d3" value="A surprising human story" />                  <span class="option-text">A surprising human story <span class="zh">/ 出人意料的人物故事</span></span></label>
+        <label class="option-row"><input type="checkbox" name="d3" value="Cultural / food element" />                   <span class="option-text">Cultural / food element <span class="zh">/ 文化或美食元素</span></span></label>
+        <label class="option-row"><input type="checkbox" name="d3" value="Athletic performance / record-breaking moment" /><span class="option-text">Athletic performance / record-breaking moment <span class="zh">/ 競技表現或破紀錄瞬間</span></span></label>
+        <label class="option-row"><input type="checkbox" name="d3" value="Surprising statistics / data" />              <span class="option-text">Surprising statistics / data <span class="zh">/ 驚奇的數據</span></span></label>
+        <label class="option-row"><input type="checkbox" name="d3" value="Raw, authentic emotional moment" />           <span class="option-text">Raw, authentic emotional moment <span class="zh">/ 真實情感瞬間</span></span></label>
+        <label class="option-row"><input type="checkbox" name="d3" value="Music / energy / rhythm" />                   <span class="option-text">Music / energy / rhythm <span class="zh">/ 配樂、節奏與氣氛</span></span></label>
+      </div>
+      <div class="error-msg">Please select at least one option.</div>
+    </div>
+
+    <div class="nav">
+      <button class="btn btn-back" onclick="prevStep(4)">← Back</button>
+      <button class="btn btn-next" onclick="nextStep(4)">Next: Open Insights →</button>
+    </div>
+  </div>
+
+  <!-- ━━━━━━━━━━━━ STEP 5 · SECTION E ━━━━━━━━━━━━ -->
+  <div class="step" id="step-5">
+    <div class="section-header">
+      <div class="section-label">Section E</div>
+      <div class="section-title">Open Insights <span class="zh">開放性洞察</span></div>
+    </div>
+
+    <!-- E1 -->
+    <div class="q-card" id="q-e1">
+      <div class="q-label"><span class="num">E1.</span> What is the most "uniquely Taiwan" thing you've heard or experienced about running here?</div>
+      <div class="q-sublabel">你聽過或體驗過,最「只屬於台灣」的跑步特色是什麼?</div>
+      <textarea id="e1" placeholder="Your answer / 請填寫" rows="4"></textarea>
+      <div class="error-msg">Please share your thoughts.</div>
+    </div>
+
+    <!-- E2 -->
+    <div class="q-card" id="q-e2">
+      <div class="q-label"><span class="num">E2.</span> If you watched only ONE episode of this series, which would it be — and why?</div>
+      <div class="q-sublabel">如果只看一集,你會選哪一集? 為什麼?</div>
+      <textarea id="e2" placeholder="Your answer / 請填寫" rows="4"></textarea>
+      <div class="error-msg">Please share your answer.</div>
+    </div>
+
+    <!-- E3 -->
+    <div class="q-card" id="q-e3">
+      <div class="q-label"><span class="num">E3.</span> What story or angle do running documentaries USUALLY miss, that you wish someone would cover?</div>
+      <div class="q-sublabel">一般跑步紀錄片通常會錯過什麼故事或角度? 你希望有人拍出來?</div>
+      <textarea id="e3" placeholder="Your answer / 請填寫" rows="4"></textarea>
+      <div class="error-msg">Please share your thoughts.</div>
+    </div>
+
+    <div class="nav">
+      <button class="btn btn-back" onclick="prevStep(5)">← Back</button>
+      <button class="btn btn-next" onclick="nextStep(5)">Next: Final Section →</button>
+    </div>
+  </div>
+
+  <!-- ━━━━━━━━━━━━ STEP 6 · SECTION F ━━━━━━━━━━━━ -->
+  <div class="step" id="step-6">
+    <div class="section-header">
+      <div class="section-label">Section F</div>
+      <div class="section-title">Viewing & Sharing Intent <span class="zh">觀看與分享意願</span></div>
+    </div>
+
+    <!-- F1 -->
+    <div class="q-card" id="q-f1">
+      <div class="q-label"><span class="num">F1.</span> Based on what you've seen so far, would you watch this documentary series?</div>
+      <div class="q-sublabel">根據前述描述,你會觀看這部紀錄片系列嗎?</div>
+      <div class="options" role="radiogroup">
+        <label class="option-row"><input type="radio" name="f1" value="Definitely yes" />  <span class="option-text">Definitely yes <span class="zh">/ 一定會</span></span></label>
+        <label class="option-row"><input type="radio" name="f1" value="Probably yes" />    <span class="option-text">Probably yes <span class="zh">/ 應該會</span></span></label>
+        <label class="option-row"><input type="radio" name="f1" value="Not sure" />        <span class="option-text">Not sure <span class="zh">/ 不確定</span></span></label>
+        <label class="option-row"><input type="radio" name="f1" value="Probably not" />    <span class="option-text">Probably not <span class="zh">/ 應該不會</span></span></label>
+        <label class="option-row"><input type="radio" name="f1" value="Definitely not" />  <span class="option-text">Definitely not <span class="zh">/ 一定不會</span></span></label>
+      </div>
+      <div class="error-msg">Please select an option.</div>
+    </div>
+
+    <!-- F2 -->
+    <div class="q-card" id="q-f2">
+      <div class="q-label"><span class="num">F2.</span> Would you share an episode with your running community if you enjoyed it?</div>
+      <div class="q-sublabel">如果你喜歡,會分享給你的跑步社群嗎?</div>
+      <div class="options" role="radiogroup">
+        <label class="option-row"><input type="radio" name="f2" value="Definitely" />           <span class="option-text">Definitely <span class="zh">/ 一定會分享</span></span></label>
+        <label class="option-row"><input type="radio" name="f2" value="Probably" />             <span class="option-text">Probably <span class="zh">/ 應該會分享</span></span></label>
+        <label class="option-row"><input type="radio" name="f2" value="Only if it's really good" /><span class="option-text">Only if it's really good <span class="zh">/ 看品質決定</span></span></label>
+        <label class="option-row"><input type="radio" name="f2" value="Probably not" />         <span class="option-text">Probably not <span class="zh">/ 應該不會</span></span></label>
+      </div>
+      <div class="error-msg">Please select an option.</div>
+    </div>
+
+    <!-- F3 -->
+    <div class="q-card">
+      <div class="q-label"><span class="num">F3.</span> After watching this series, how would your view of Taiwan as a running destination change? <span style="color:#aaa;font-weight:400;">(Optional)</span></div>
+      <div class="q-sublabel">看完這部系列後,你對台灣作為跑步目的地的看法可能會如何改變? (選填)</div>
+      <textarea id="f3" placeholder="Your answer / 請填寫 (optional)" rows="4"></textarea>
+    </div>
+
+    <div id="submit-error">Unable to submit. Please check your connection and try again.</div>
+
+    <div class="nav">
+      <button class="btn btn-back" onclick="prevStep(6)">← Back</button>
+      <button class="btn btn-submit" id="submit-btn" onclick="submitForm()">Submit Survey ✓</button>
+    </div>
+  </div>
+
+  <!-- ━━━━━━━━━━━━ SUCCESS ━━━━━━━━━━━━ -->
+  <div id="success-screen">
+    <div class="success-icon">🏅</div>
+    <div class="success-title">Thank you!</div>
+    <div class="success-sub">感謝你的時間與洞察</div>
+    <p class="success-msg">
+      Your responses have been recorded and will directly shape the content direction of <strong>Chasing 42K of Marathon</strong>.<br><br>
+      <span class="zh">你的回饋將直接影響本系列的內容方向。</span><br><br>
+      — TaiwanPlus · Chasing 42K of Marathon Production Team —
+    </p>
+  </div>
+
+</main>
+
+<script>
+  // ── CONFIG ──────────────────────────────────────────────
+  // Paste your Google Apps Script Web App URL here after deploying Code.gs
+  const APPS_SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+
+  // ── STATE ────────────────────────────────────────────────
+  let currentStep = 1;
+  const totalSteps = 6;
+
+  const stepLabels = [
+    'Section A · About You',
+    'Section B · Why Taiwan?',
+    'Section C · Episode Theme Appeal',
+    'Section D · Format & Viewing',
+    'Section E · Open Insights',
+    'Section F · Viewing & Sharing Intent'
+  ];
+
+  // ── NAVIGATION ───────────────────────────────────────────
+  function showStep(n) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('step-' + n).classList.add('active');
+    document.getElementById('step-label').textContent = stepLabels[n - 1];
+    document.getElementById('step-count').textContent = n + ' / ' + totalSteps;
+    document.getElementById('progress-fill').style.width = (n / totalSteps * 100) + '%';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    currentStep = n;
+  }
+
+  function nextStep(from) {
+    if (validateStep(from)) showStep(from + 1);
+  }
+
+  function prevStep(from) {
+    showStep(from - 1);
+  }
+
+  // ── VALIDATION ───────────────────────────────────────────
+  function setError(cardId, show) {
+    const el = document.getElementById(cardId);
+    if (!el) return;
+    el.classList.toggle('has-error', show);
+  }
+
+  function validateStep(n) {
+    let ok = true;
+
+    if (n === 1) {
+      const a1 = document.getElementById('a1').value.trim();
+      setError('q-a1', !a1); if (!a1) ok = false;
+
+      const a2 = document.querySelector('input[name="a2"]:checked');
+      setError('q-a2', !a2); if (!a2) ok = false;
+
+      const a3 = document.querySelector('input[name="a3"]:checked');
+      setError('q-a3', !a3); if (!a3) ok = false;
+
+      const a4 = document.querySelector('input[name="a4"]:checked');
+      setError('q-a4', !a4); if (!a4) ok = false;
+
+      const a5 = document.querySelector('input[name="a5"]:checked');
+      setError('q-a5', !a5); if (!a5) ok = false;
+    }
+
+    if (n === 2) {
+      const b1 = document.querySelectorAll('input[name="b1"]:checked');
+      setError('q-b1', b1.length === 0); if (b1.length === 0) ok = false;
+
+      const b2 = document.querySelector('input[name="b2"]:checked');
+      setError('q-b2', !b2); if (!b2) ok = false;
+
+      const b3 = document.getElementById('b3').value.trim();
+      setError('q-b3', !b3); if (!b3) ok = false;
+    }
+
+    if (n === 3) {
+      // All 8 episode ratings required
+      const epNames = ['c1','c2','c3','c4','c5','c6','c7','c8'];
+      let ratingsOk = true;
+      epNames.forEach(ep => {
+        const rated = document.querySelector('input[name="' + ep + '"]:checked');
+        const rg = document.getElementById('rg-' + ep);
+        if (!rated) {
+          rg.style.outline = '2px solid #e74c3c';
+          rg.style.borderRadius = '8px';
+          ratingsOk = false;
+        } else {
+          rg.style.outline = 'none';
+        }
+      });
+      if (!ratingsOk) ok = false;
+
+      // C9 rank validation
+      const r1 = document.getElementById('c9-1').value;
+      const r2 = document.getElementById('c9-2').value;
+      const r3 = document.getElementById('c9-3').value;
+      const ranksValid = r1 && r2 && r3 && r1 !== r2 && r1 !== r3 && r2 !== r3;
+      const c9card = document.getElementById('q-c9');
+      const c9err = document.getElementById('c9-error');
+      c9card.classList.toggle('has-error', !ranksValid);
+      c9err.style.display = ranksValid ? 'none' : 'block';
+      if (!ranksValid) ok = false;
+    }
+
+    if (n === 4) {
+      const d1 = document.querySelector('input[name="d1"]:checked');
+      setError('q-d1', !d1); if (!d1) ok = false;
+
+      const d2 = document.querySelectorAll('input[name="d2"]:checked');
+      setError('q-d2', d2.length === 0); if (d2.length === 0) ok = false;
+
+      const d3 = document.querySelectorAll('input[name="d3"]:checked');
+      setError('q-d3', d3.length === 0); if (d3.length === 0) ok = false;
+    }
+
+    if (n === 5) {
+      const e1 = document.getElementById('e1').value.trim();
+      setError('q-e1', !e1); if (!e1) ok = false;
+
+      const e2 = document.getElementById('e2').value.trim();
+      setError('q-e2', !e2); if (!e2) ok = false;
+
+      const e3 = document.getElementById('e3').value.trim();
+      setError('q-e3', !e3); if (!e3) ok = false;
+    }
+
+    if (n === 6) {
+      const f1 = document.querySelector('input[name="f1"]:checked');
+      setError('q-f1', !f1); if (!f1) ok = false;
+
+      const f2 = document.querySelector('input[name="f2"]:checked');
+      setError('q-f2', !f2); if (!f2) ok = false;
+    }
+
+    if (!ok) {
+      // Scroll to first error
+      const firstError = document.querySelector('.step.active .has-error, .step.active [style*="outline: 2px"]');
+      if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    return ok;
+  }
+
+  // ── B1 cap at 3 ──────────────────────────────────────────
+  document.getElementById('b1-options').addEventListener('change', function(e) {
+    const checked = document.querySelectorAll('input[name="b1"]:checked');
+    if (checked.length > 3) e.target.checked = false;
+
+    // toggle Other text field
+    const otherChecked = document.getElementById('b1-other-check').checked;
+    document.getElementById('b1-other-wrap').style.display = otherChecked ? 'block' : 'none';
+
+    // update visual state
+    syncCheckedClass('b1');
+  });
+
+  // ── D3 cap at 2 ──────────────────────────────────────────
+  document.getElementById('d3-options').addEventListener('change', function(e) {
+    const checked = document.querySelectorAll('input[name="d3"]:checked');
+    if (checked.length > 2) e.target.checked = false;
+    syncCheckedClass('d3');
+  });
+
+  // ── Sync .checked class on option-rows ───────────────────
+  function syncCheckedClass(name) {
+    document.querySelectorAll('input[name="' + name + '"]').forEach(inp => {
+      inp.closest('.option-row').classList.toggle('checked', inp.checked);
+    });
+  }
+
+  document.querySelectorAll('.option-row input').forEach(inp => {
+    inp.addEventListener('change', () => {
+      if (inp.type === 'radio') {
+        document.querySelectorAll('input[name="' + inp.name + '"]').forEach(r => {
+          r.closest('.option-row').classList.toggle('checked', r.checked);
+        });
+      } else {
+        inp.closest('.option-row').classList.toggle('checked', inp.checked);
+      }
+      // clear error on interaction
+      const card = inp.closest('.q-card');
+      if (card) card.classList.remove('has-error');
+    });
+  });
+
+  document.querySelectorAll('.q-card input[type="text"], .q-card textarea').forEach(el => {
+    el.addEventListener('input', () => {
+      const card = el.closest('.q-card');
+      if (card) card.classList.remove('has-error');
+    });
+  });
+
+  // ── C9 rank uniqueness ───────────────────────────────────
+  function updateRankSelects() {
+    // no auto-removal; validation handles it
+  }
+
+  // ── COLLECT DATA ─────────────────────────────────────────
+  function collectData() {
+    const getChecked = name => Array.from(document.querySelectorAll('input[name="' + name + '"]:checked')).map(i => i.value).join(', ');
+    const getRadio   = name => { const el = document.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : ''; };
+    const getText    = id   => document.getElementById(id).value.trim();
+
+    return {
+      timestamp:         new Date().toISOString(),
+      a1_nationality:    getText('a1'),
+      a2_age:            getRadio('a2'),
+      a3_experience:     getRadio('a3'),
+      a4_marathons:      getRadio('a4'),
+      a5_taiwan:         getRadio('a5'),
+      b1_attractions:    getChecked('b1'),
+      b1_other_detail:   getText('b1-other-text'),
+      b2_barrier:        getRadio('b2'),
+      b2_comments:       getText('b2-comments'),
+      b3_word:           getText('b3'),
+      c1_ep01:           getRadio('c1'),
+      c2_ep02:           getRadio('c2'),
+      c3_ep03:           getRadio('c3'),
+      c4_ep04:           getRadio('c4'),
+      c5_ep05:           getRadio('c5'),
+      c6_ep06:           getRadio('c6'),
+      c7_ep07:           getRadio('c7'),
+      c8_ep08:           getRadio('c8'),
+      c9_rank1:          getText('c9-1'),
+      c9_rank2:          getText('c9-2'),
+      c9_rank3:          getText('c9-3'),
+      d1_video_length:   getRadio('d1'),
+      d2_platforms:      getChecked('d2'),
+      d3_hooks:          getChecked('d3'),
+      e1_unique_taiwan:  getText('e1'),
+      e2_one_episode:    getText('e2'),
+      e3_missed_story:   getText('e3'),
+      f1_watch:          getRadio('f1'),
+      f2_share:          getRadio('f2'),
+      f3_destination:    getText('f3'),
+    };
+  }
+
+  // ── SUBMIT ───────────────────────────────────────────────
+  async function submitForm() {
+    if (!validateStep(6)) return;
+
+    const btn = document.getElementById('submit-btn');
+    const errBanner = document.getElementById('submit-error');
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+    errBanner.style.display = 'none';
+
+    const data = collectData();
+
+    if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+      // Dev mode: just log and show success
+      console.log('Survey data (paste your Apps Script URL to enable submission):', data);
+      showSuccess();
+      return;
+    }
+
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      showSuccess();
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = 'Submit Survey ✓';
+      errBanner.style.display = 'block';
+      console.error(err);
+    }
+  }
+
+  function showSuccess() {
+    document.querySelector('.main').style.display = 'none';
+    document.getElementById('success-screen').style.display = 'block';
+    document.querySelector('.progress-wrap').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
